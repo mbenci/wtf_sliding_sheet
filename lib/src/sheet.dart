@@ -290,7 +290,7 @@ class SlidingSheet extends StatefulWidget {
   /// width is bigger than the `maxWidth` of the sheet.
   SlidingSheet({
     Key? key,
-    required SheetBuilder? builder,
+    SheetBuilder? builder,
     CustomSheetBuilder? customBuilder,
     SheetBuilder? headerBuilder,
     SheetBuilder? footerBuilder,
