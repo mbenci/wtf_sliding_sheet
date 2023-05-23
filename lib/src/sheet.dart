@@ -18,6 +18,10 @@ part 'sheet_state.dart';
 /// Widget for building sheet
 typedef SheetBuilder = Widget Function(BuildContext context, SheetState state);
 
+/// Widget for building custom sheet with own custom sroll
+typedef CustomSheetBuilder = Widget Function(
+    BuildContext context, ScrollController controller, SheetState state);
+
 /// Callback for changing state of the sheet
 typedef SheetListener = void Function(SheetState state);
 
@@ -37,7 +41,13 @@ class SlidingSheet extends StatefulWidget {
   /// The builder for the main content of the sheet that will be scrolled if
   /// the content is bigger than the height that the sheet can expand to.
   /// {@endtemplate}
-  final SheetBuilder builder;
+  final SheetBuilder? builder;
+
+  /// {@template sliding_sheet.customBuilder}
+  /// Allows you to supply your own custom sroll view. Useful for infinite lists
+  /// that cannot be shrinkWrapped like long lists.
+  /// {@endtemplate}
+  final CustomSheetBuilder? customBuilder;
 
   /// {@template sliding_sheet.headerBuilder}
   /// The builder for a header that will be displayed at the top of the sheet
@@ -280,7 +290,8 @@ class SlidingSheet extends StatefulWidget {
   /// width is bigger than the `maxWidth` of the sheet.
   SlidingSheet({
     Key? key,
-    required SheetBuilder builder,
+    required SheetBuilder? builder,
+    CustomSheetBuilder? customBuilder,
     SheetBuilder? headerBuilder,
     SheetBuilder? footerBuilder,
     SnapSpec snapSpec = const SnapSpec(),
@@ -316,6 +327,7 @@ class SlidingSheet extends StatefulWidget {
   }) : this._(
           key: key,
           builder: builder,
+          customBuilder: customBuilder,
           headerBuilder: headerBuilder,
           footerBuilder: footerBuilder,
           snapSpec: snapSpec,
@@ -354,6 +366,7 @@ class SlidingSheet extends StatefulWidget {
   SlidingSheet._({
     Key? key,
     required this.builder,
+    required this.customBuilder,
     required this.headerBuilder,
     required this.footerBuilder,
     required this.snapSpec,
@@ -388,7 +401,9 @@ class SlidingSheet extends StatefulWidget {
     this.isDismissable = true,
     this.onDismissPrevented,
     this.onOpen,
-  })  : assert(
+  })  : assert(builder != null || customBuilder != null),
+        assert(builder == null || customBuilder == null),
+        assert(
           snapSpec.snappings.length >= 2,
           'There must be at least two snapping extents to snap in between.',
         ),
@@ -435,6 +450,8 @@ class _SlidingSheetState extends State<SlidingSheet>
   _SheetExtent? extent;
   SheetController? sheetController;
   late _SlidingSheetScrollController controller;
+
+  bool get isCustom => widget.customBuilder != null;
 
   // Whether the sheet has drawn its first frame.
   bool get isLaidOut => availableHeight > 0 && childHeight > 0;
@@ -1060,23 +1077,28 @@ class _SlidingSheetState extends State<SlidingSheet>
 
   Widget _buildScrollView() {
     Widget scrollView = Listener(
-      onPointerUp: (_) => _handleNonDismissableSnapBack(),
-      child: SingleChildScrollView(
-        controller: controller,
-        physics: scrollSpec.physics,
-        padding: EdgeInsets.only(
-          top: !hasHeader ? padding.top : 0.0,
-          bottom: !hasFooter ? padding.bottom : 0.0,
-        ),
-        child: ConstrainedBox(
-          constraints: BoxConstraints(minHeight: widget.minHeight ?? 0.0),
-          child: SizeChangedLayoutNotifier(
-            key: childKey,
-            child: widget.builder(context, state),
-          ),
-        ),
-      ),
-    );
+        onPointerUp: (_) => _handleNonDismissableSnapBack(),
+        child: (widget.customBuilder != null)
+            ? Container(
+                key: childKey,
+                child: widget.customBuilder!(context, controller, state),
+              )
+            : SingleChildScrollView(
+                controller: controller,
+                physics: scrollSpec.physics,
+                padding: EdgeInsets.only(
+                  top: !hasHeader ? padding.top : 0.0,
+                  bottom: !hasFooter ? padding.bottom : 0.0,
+                ),
+                child: ConstrainedBox(
+                  constraints:
+                      BoxConstraints(minHeight: widget.minHeight ?? 0.0),
+                  child: SizeChangedLayoutNotifier(
+                    key: childKey,
+                    child: widget.builder!(context, state),
+                  ),
+                ),
+              ));
 
     if (scrollSpec.showScrollbar) {
       scrollView = Scrollbar(
