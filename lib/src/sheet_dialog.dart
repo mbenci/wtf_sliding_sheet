@@ -82,6 +82,7 @@ Future<T?> showSlidingBottomSheet<T>(
               isDismissable: dialog.isDismissable,
               onDismissPrevented: dialog.onDismissPrevented,
               isBackdropInteractable: dialog.isBackdropInteractable,
+              isBackdropInteractableWhenCollapsed: false,
               axisAlignment: dialog.axisAlignment,
               extendBody: dialog.extendBody,
               liftOnScrollHeaderElevation: dialog.liftOnScrollHeaderElevation,
