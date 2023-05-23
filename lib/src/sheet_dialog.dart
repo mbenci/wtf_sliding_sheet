@@ -116,7 +116,7 @@ Future<T?> showSlidingBottomSheet<T>(
 /// A wrapper class to show a [SlidingSheet] as a bottom sheet dialog.
 class SlidingSheetDialog {
   /// {@macro sliding_sheet.builder}
-  final SheetBuilder builder;
+  final SheetBuilder? builder;
 
   /// {@macro sliding_sheet.customBuilder}
   final CustomSheetBuilder? customBuilder;
@@ -205,7 +205,7 @@ class SlidingSheetDialog {
 
   /// Creates a wrapper class to show a [SlidingSheet] as a bottom sheet dialog.
   const SlidingSheetDialog({
-    required this.builder,
+    this.builder,
     this.customBuilder,
     this.headerBuilder,
     this.footerBuilder,
